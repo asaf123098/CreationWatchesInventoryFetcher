@@ -59,7 +59,6 @@ namespace CreationWatchesInventoryFetcher
                 //Create the card with the header and collapsable part
                 HtmlNode card = this.GetCardElement(i, itemsList[i]);
                 accordion.AppendChild(card);
-                Application.DoEvents();
             }
             this.document.Save(HtmlFileName);
         }

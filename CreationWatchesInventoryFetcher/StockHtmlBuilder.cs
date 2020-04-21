@@ -88,7 +88,6 @@ namespace CreationWatchesInventoryFetcher
                                                 
                 string[] arr = new string[] { title, id, condition, link, price, sale_price, quantity ,availability };
                 parsedItemsList.Add(arr);
-                Application.DoEvents();
             }
 
             return parsedItemsList;
