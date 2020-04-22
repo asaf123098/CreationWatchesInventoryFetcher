@@ -2,20 +2,21 @@
 using System.IO;
 using System.Net;
 using System.Xml;
-using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 using System.Collections.Generic;
-using HtmlAgilityPack;
 
 namespace CreationWatchesInventoryFetcher
 {
     public partial class StockHtmlBuilder : Form
     {
         private HtmlHandler HtmlHandler;
-        public StockHtmlBuilder()
+        private List<string[]> ListedItems;
+
+        public StockHtmlBuilder(List<string[]> ListedItems)
         {
             InitializeComponent();
+            this.ListedItems = ListedItems;
         }
 
         private void FormShown(object sender, EventArgs e)
@@ -31,7 +32,8 @@ namespace CreationWatchesInventoryFetcher
             string response = this.Get("http://www.creationwatches.com/products_googlebase.xml");
             List<string[]> xmlNodes = GetParsedXml(response);
             this.ParseHtml();
-            this.HtmlHandler.UpdateHtml(xmlNodes);
+            this.HtmlHandler.UpdateStock(xmlNodes);
+            this.HtmlHandler.AddListedItems(this.ListedItems);
             Generals.OpenLink(HtmlHandler.HtmlFileName);
         }
 

@@ -16,7 +16,7 @@ namespace CreationWatchesInventoryFetcher
     {
         private XmlDocument xmlDoc;
         private const string XmlFileName = "listed_files.xml";
-        private HtmlHandler HtmlHandler;
+        private readonly HtmlHandler HtmlHandler;
         public MainWindow()
         {
             InitializeComponent();
@@ -27,7 +27,6 @@ namespace CreationWatchesInventoryFetcher
         {
             this.LoadXml();
             this.AddXmlItemsToList();
-            this.AddListedItemsToHtml();
         }
 
         private void LoadXml()
@@ -67,20 +66,6 @@ namespace CreationWatchesInventoryFetcher
             this.ListedItemsList.Columns[0].Width = -1; // To make sure the column will be sized by the longest item.
         }
 
-        private void AddListedItemsToHtml()
-        {
-            List<string[]> itemsList = new List<string[]>();
-            foreach (XmlNode item in this.xmlDoc.GetElementsByTagName("item"))
-            {
-                string itemName = item.SelectSingleNode("./name").InnerText;
-                string itemLink = item.SelectSingleNode("./link").InnerText;
-                string itemId= item.SelectSingleNode("./id").InnerText;
-
-                itemsList.Add(new string[] { itemName, itemLink, itemId });
-            }
-            this.HtmlHandler.AddListedItems(itemsList);
-        }
-
         private void ListedItemsList_MouseDoubleClick(object sender, MouseEventArgs e)
         {
 
@@ -91,12 +76,31 @@ namespace CreationWatchesInventoryFetcher
 
         private void GenerateHtmlButton_Click(object sender, EventArgs e)
         {
-            new StockHtmlBuilder().Show();
+            List<string[]> ListedItems = this.GetListedItems();
+            new StockHtmlBuilder(ListedItems).Show();
+        }
+
+        /// <summary>
+        /// This method parses the listed items as list
+        /// </summary>
+        /// <returns> List of string arrays { itemName, itemLink, itemId }</returns>
+
+        private List<string[]> GetListedItems()
+        {
+            List<string[]> ListedItems = new List<string[]>();
+            foreach (XmlNode item in this.xmlDoc.GetElementsByTagName("item"))
+            {
+                string itemName = item.SelectSingleNode("./name").InnerText;
+                string itemLink = item.SelectSingleNode("./link").InnerText;
+                string itemId = item.SelectSingleNode("./id").InnerText;
+
+                ListedItems.Add(new string[] { itemName, itemLink, itemId });
+            }
+            return ListedItems;
         }
 
         private void AddNewItemButton_Click(object sender, EventArgs e)
         {
-            this.LoadXml(); //Refresh the loaded xml from the file
             XmlNode item = this.xmlDoc.CreateElement("item");
             
             XmlNode name = this.xmlDoc.CreateElement("name");
@@ -108,7 +112,7 @@ namespace CreationWatchesInventoryFetcher
             this.LinkTextBox.Text = "";
 
             XmlNode id = this.xmlDoc.CreateElement("id");
-            id.InnerText = this.IdTextBox.Text;
+            id.InnerText = this.IdTextBox.Text.Trim(new char[]  {' '});
             this.IdTextBox.Text = "";
 
             item.AppendChild(name);
@@ -116,7 +120,6 @@ namespace CreationWatchesInventoryFetcher
             item.AppendChild(id);
 
             this.AddXmlItemToList(item);
-            this.AddListedItemsToHtml();
             this.xmlDoc.GetElementsByTagName("items")[0].AppendChild(item);
             this.xmlDoc.Save(XmlFileName);
         }
@@ -147,7 +150,6 @@ namespace CreationWatchesInventoryFetcher
                 }
             }
             focused.Remove();
-            this.AddListedItemsToHtml();
             this.xmlDoc.Save(XmlFileName);
         }
     }

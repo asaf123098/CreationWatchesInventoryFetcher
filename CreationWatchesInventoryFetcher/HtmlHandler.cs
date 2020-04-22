@@ -1,7 +1,5 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using HtmlAgilityPack;
-using System.Windows.Forms;
 using System.Collections.Generic;
 
 namespace CreationWatchesInventoryFetcher
@@ -9,47 +7,55 @@ namespace CreationWatchesInventoryFetcher
     class HtmlHandler
     {
         public const string HtmlFileName = "xml_viewer.html";
-        private HtmlAgilityPack.HtmlDocument document;
+        private readonly HtmlDocument document;
 
         public HtmlHandler()
         {
-            this.document = new HtmlAgilityPack.HtmlDocument();
+            this.document = new HtmlDocument();
             this.document.Load(HtmlFileName);
         }
 
         public void AddListedItems(List<string[]> ListedItems)
         {
+            bool foundOutOfStockItems = false;
             string alertState;
-            string sentenceEnd;
+            
+            HtmlNode outOfStockContainer = Generals.FindNodes(this.document, "//div[@id='nav-out-of-stock']")[0];
+            HtmlNode inStockContainer = Generals.FindNodes(this.document, "//div[@id='nav-in-stock']")[0];
+            ref HtmlNode nodeToAppendTo = ref outOfStockContainer;
 
-            HtmlNode listedItemsContainer = Generals.FindNodes(this.document, "//div[@id='listed_items']")[0];
-            listedItemsContainer.RemoveAllChildren();
-            foreach(string[] listedItem in ListedItems)
+            outOfStockContainer.RemoveAllChildren();
+            inStockContainer.RemoveAllChildren();
+
+            foreach (string[] listedItem in ListedItems)
             {
                 HtmlNodeCollection matchingIdItems = 
                     Generals.FindNodes(this.document, $"//div[@class='card' and @id='{listedItem[2]}']", false);
 
-                bool foundMatchingItems = matchingIdItems != null;
-
-                if (!foundMatchingItems)
+                if (matchingIdItems is null)
                 {
                     alertState = "danger";
-                    sentenceEnd = "not in Stock!!!";
+                    nodeToAppendTo = ref outOfStockContainer;
+                    foundOutOfStockItems = true;
                 }
                 else
                 {
                     alertState = "success";
-                    sentenceEnd = "in Stock";
+                    nodeToAppendTo = ref inStockContainer;
                 }
 
-                HtmlNode dangerDiv = HtmlNode.CreateNode($"<div class='alert alert-{alertState} mt-3' role='alert'>" +
-                        $"<a href='{listedItem[1]}' class='alert-link'>Item</a> {listedItem[0]} is {sentenceEnd}</div>");
-                listedItemsContainer.AppendChild(dangerDiv);
+                HtmlNode div = HtmlNode.CreateNode($"<div class='alert alert-{alertState} mt-3' role='alert'>" +
+                        $"<a href='{listedItem[1]}' class='alert-link'>Item</a> {listedItem[0]}</div>");
+                nodeToAppendTo.AppendChild(div);
+            }
+            if (!foundOutOfStockItems)
+            {
+                outOfStockContainer.InnerHtml = "No items are out of stock.";
             }
             this.document.Save(HtmlFileName);
         }
 
-        public void UpdateHtml(List<string[]> itemsList)
+        public void UpdateStock(List<string[]> itemsList)
         {
             HtmlNode accordion = Generals.FindNodes(this.document, "//div[@id='accordion']")[0];
             accordion.RemoveAllChildren();
