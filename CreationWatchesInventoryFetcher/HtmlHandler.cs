@@ -6,7 +6,7 @@ namespace CreationWatchesInventoryFetcher
 {
     class HtmlHandler
     {
-        public const string HtmlFileName = "xml_viewer.html";
+        public const string HtmlFileName = @"xml_viewer.html";
         private readonly HtmlDocument document;
 
         public HtmlHandler()

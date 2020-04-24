@@ -16,12 +16,11 @@ namespace CreationWatchesInventoryFetcher
     {
         private XmlDocument xmlDoc;
         private const string XmlFileName = "listed_files.xml";
-        private readonly HtmlHandler HtmlHandler;
+
         public MainWindow()
         {
             InitializeComponent();
-            this.HtmlHandler = new HtmlHandler();
-        }
+        }  
 
         private void MainWindow_Load(object sender, EventArgs e)
         {
@@ -137,19 +136,23 @@ namespace CreationWatchesInventoryFetcher
 
         private void ItemDeleteClicked(object sender, EventArgs e)
         {
-            ListViewItem focused = ListedItemsList.FocusedItem;
+            ListView.SelectedListViewItemCollection selectedItems = ListedItemsList.SelectedItems;
 
-            foreach (XmlNode item in this.xmlDoc.GetElementsByTagName("item"))
+            foreach (ListViewItem selectedItem in selectedItems)
             {
-                string itemId= item.SelectSingleNode("./id").InnerText;
+                this.ListedItemsList.Items.Remove(selectedItem);
 
-                if (itemId == focused.SubItems[2].Text)
+                foreach (XmlNode item in this.xmlDoc.GetElementsByTagName("item"))
                 {
-                    this.xmlDoc.GetElementsByTagName("items")[0].RemoveChild(item);
-                    break;
+                    string itemId = item.SelectSingleNode("./id").InnerText;
+
+                    if (itemId == selectedItem.SubItems[2].Text)
+                    {
+                        this.xmlDoc.GetElementsByTagName("items")[0].RemoveChild(item);
+                        break;
+                    }
                 }
-            }
-            focused.Remove();
+            }            
             this.xmlDoc.Save(XmlFileName);
         }
     }
